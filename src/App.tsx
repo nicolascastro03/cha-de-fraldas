@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Box, Typography, Button, Card, CardContent, Dialog, DialogActions, DialogContent } from "@mui/material";
 import { WhatsApp, LocationOn } from "@mui/icons-material";
-import { GlobalStyles } from "@mui/system";
+import { GlobalStyles, palette } from "@mui/system";
 import { db, doc, getDoc, updateDoc } from "./firebaseConfig";
 import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
+import theme from "./styles/theme";
 
 const ChaDeFraldas = () => {
   const whatsappLink = "https://wa.me/5537998709332?text=Olá! Quero confirmar presença no chá de fraldas!";
@@ -12,10 +13,25 @@ const ChaDeFraldas = () => {
 
   const [tamanhoFralda, setTamanhoFralda] = useState<string | null>(null);
   const [openModal, setOpenModal] = useState(false);
+  const [presenteConfirmado, setPresenteConfirmado] = useState(false);
+
+  const marcasFraldas = [
+    "/marcas/pampers.jpeg",
+    "/marcas/huggies.jpeg",
+    "/marcas/mamypoko.jpeg",
+    "/marcas/personal.jpeg",
+    "/marcas/babysec.jpeg",
+  ];
 
   useEffect(() => {
     const fetchTamanhoFralda = async () => {
       const storedSize = localStorage.getItem("tamanhoFralda");
+      const storedConfirmed = localStorage.getItem("presenteConfirmado");
+
+      if (storedConfirmed === "true") {
+        setPresenteConfirmado(true);
+      }
+
       if (storedSize) {
         setTamanhoFralda(storedSize);
         return;
@@ -33,15 +49,30 @@ const ChaDeFraldas = () => {
           setTamanhoFralda(tamanhoSorteado);
           localStorage.setItem("tamanhoFralda", tamanhoSorteado);
 
-          await updateDoc(fraldasRef, {
-            [tamanhoSorteado]: fraldas[tamanhoSorteado] - 1,
-          });
         }
       }
     };
 
     fetchTamanhoFralda();
   }, []);
+
+  const handleConfirmarPresente = async () => {
+    if (!tamanhoFralda || presenteConfirmado) return;
+
+    const fraldasRef = doc(db, "fraldas", "disponiveis");
+    const fraldasSnap = await getDoc(fraldasRef);
+
+    if (fraldasSnap.exists()) {
+      const fraldas = fraldasSnap.data();
+      if (fraldas[tamanhoFralda] > 0) {
+        await updateDoc(fraldasRef, {
+          [tamanhoFralda]: fraldas[tamanhoFralda] - 1,
+        });
+        setPresenteConfirmado(true);
+        localStorage.setItem("presenteConfirmado", "true"); 
+      }
+    }
+  };
 
   const handleModalOpen = () => setOpenModal(true);
   const handleModalClose = () => setOpenModal(false);
@@ -56,7 +87,7 @@ const ChaDeFraldas = () => {
       />
       <Box
         sx={{
-          position: "relative",  
+          position: "relative",
           backgroundImage: 'url("/fundo.jpeg")',
           backgroundSize: "cover",
           backgroundPosition: "center",
@@ -66,27 +97,27 @@ const ChaDeFraldas = () => {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          justifyContent: "flex-start", 
+          justifyContent: "flex-start",
           color: "black",
           textAlign: "center",
           padding: "20px",
-          zIndex: 1, 
+          zIndex: 1,
           '@media (max-width: 600px)': {
             backgroundImage: 'url("/fundo-mobile.jpg")',
           }
         }}
       >
-        <Typography 
-          variant="h3" 
-          sx={{ 
+        <Typography
+          variant="h3"
+          sx={{
             color: "#dab0a9",
-            marginBottom: "250px", 
-            fontFamily: "'Brush Script Std', cursive", 
+            marginBottom: "250px",
+            fontFamily: "'Brush Script Std', cursive",
             fontWeight: "normal",
-            textShadow: "2px 2px 5px rgba(0, 0, 0, 0.4)", 
+            textShadow: "1px 1px 2px rgba(0, 0, 0, 0.4)",
             textborder: "2px solid #dab0a9",
-            padding: "10px", 
-            borderRadius: "8px",   
+            padding: "10px",
+            borderRadius: "8px",
           }}
         >
           Chá de bebê da Aurora
@@ -101,8 +132,8 @@ const ChaDeFraldas = () => {
               flexDirection: "column",
               alignItems: "center",
               justifyContent: "center",
-              width: 120,
-              height: 120,
+              width: 110,
+              height: 110,
               borderRadius: "50%",
               boxShadow: 3,
               cursor: "pointer",
@@ -121,8 +152,8 @@ const ChaDeFraldas = () => {
               flexDirection: "column",
               alignItems: "center",
               justifyContent: "center",
-              width: 120,
-              height: 120,
+              width: 110,
+              height: 110,
               borderRadius: "50%",
               boxShadow: 3,
               cursor: "pointer",
@@ -141,8 +172,8 @@ const ChaDeFraldas = () => {
               flexDirection: "column",
               alignItems: "center",
               justifyContent: "center",
-              width: 120,
-              height: 120,
+              width: 110,
+              height: 110,
               borderRadius: "50%",
               boxShadow: 3,
               cursor: "pointer",
@@ -158,12 +189,32 @@ const ChaDeFraldas = () => {
           <DialogContent>
             {tamanhoFralda ? (
               <>
-                <Typography variant="h6" gutterBottom>
-                  Sugestão de Presente:
+                <Typography variant="h6">Sugestão de Presente:</Typography>
+                <Typography variant="h5" sx={{ color: "#dab0a9", fontWeight: "bold" }}>
+                  Fralda tamanho {tamanhoFralda} + mimo da sua preferência
                 </Typography>
-                <Typography variant="h5" color="#dab0a9" sx={{ fontWeight: "bold" }}>
-                  Fralda tamanho {tamanhoFralda} + mimo da sua preferencia
+                <Typography variant="body2" sx={{ marginTop: "10px", fontSize: "20px" }}>
+                  Sugestões de marcas:
                 </Typography>
+                <Box sx={{ padding: "5px", display: "flex", justifyContent: "center", gap: "5px", marginTop: "10px" }}>
+                  {marcasFraldas.map((src, index) => (
+                    <img key={index} src={src} alt={`Marca ${index}`} style={{ width: 60, height: 60 }} />
+                  ))}
+                </Box>
+
+                <Box sx={{ display: "flex", justifyContent: "center", marginTop: "30px" }}>
+                  {!presenteConfirmado ? (
+                    <Button
+                      onClick={handleConfirmarPresente}
+                      variant="contained"
+                      sx={{ backgroundColor: theme.palette.primary.main }}
+                    >
+                      Confirmar Presente
+                    </Button>
+                  ) : (
+                    <Typography sx={{ color: "green", marginTop: "15px" }}>Presente confirmado!</Typography>
+                  )}
+                </Box>
               </>
             ) : (
               <Typography>Carregando sugestão...</Typography>
