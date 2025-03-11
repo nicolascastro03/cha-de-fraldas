@@ -184,6 +184,14 @@ const ChaDeFraldas = () => {
             <Typography variant="body2">Confirmar presença</Typography>
           </Card>
         </Box>
+        
+        <Card sx={{ marginTop: "20px", padding: "20px", textAlign: "center", boxShadow: 3 }}>
+            <Typography variant="h6" sx={{ fontWeight: "bold", color: "#dab0a9" }}>
+              Data e Horário do Evento
+            </Typography>
+            <Typography variant="body1">Sábado, 22 de Março de 2025</Typography>
+            <Typography variant="body1">Às 18:00h</Typography>
+        </Card>
 
         <Dialog open={openModal} onClose={handleModalClose}>
           <DialogContent>
